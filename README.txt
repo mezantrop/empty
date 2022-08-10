@@ -1,4 +1,4 @@
-empty-0.6.21b -- run applications under pseudo-terminal (PTY) sessions and
+empty-0.6.22b -- run applications under pseudo-terminal (PTY) sessions and
 replace TCL/Expect with a simple tool under your favourite shell (sh, bash,
 csh, tcsh, ksh, zsh, etc)
 
@@ -39,6 +39,7 @@ BUGS
 	zmey20000@yahoo.com. Developers are welcome.
 
 THANKS TO
+	Adrian Ho
 	Aleksey Kozlov <avtolik@newmail.ru>
 	Alexey Rudometov <rudometov@u-systems.ru>
 	Alex Slyotov <aslyotov@gmail.com>
@@ -61,5 +62,5 @@ THANKS TO
 	I express deep gratitude to Hewlett Packard AO Russia and personally to
 	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation
 
-March, 19, 2020
+August, 10, 2022
 Mikhail Zakharov <zmey20000@yahoo.com>
