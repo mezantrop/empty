@@ -1,11 +1,5 @@
-empty-0.6.22b -- run applications under pseudo-terminal (PTY) sessions and
-replace TCL/Expect with a simple tool under your favourite shell (sh, bash,
-csh, tcsh, ksh, zsh, etc)
-
-WARNING!
---------------------------------------------------------------------------------
-This version of the software has BUGS, so be careful and use it on you own risk!
---------------------------------------------------------------------------------
+empty-0.6.23b -- run applications under pseudo-terminal (PTY) sessions and
+replace TCL/Expect with a simple tool under your favourite shell
 
 INSTALLATION
 	for all known *BSD systems and Linux run:
@@ -17,8 +11,7 @@ INSTALLATION
 		or
 		    make `uname -s`-gcc install clean
 
-	This will compile and place empty with its manual page under
-	/usr/local tree.
+	This will compile and place empty under /usr/local tree.
 
 	Empty was successfully compiled and tested on:
 		* FreeBSD, NetBSD, OpenBSD, macOS
@@ -27,7 +20,7 @@ INSTALLATION
 		* Oracle/SUN Solaris
 		* IBM AIX
 		* HP-UX 11.00, 11.11, 11.23 (pa-risc, itanium)
-		* Cygwin DLL-1.5.19-4 (Experimental, see README.CYGWIN)
+		* Cygwin DLL-1.5.19-4 (Experimental, see README.CYGW IN)
 		* OSF1 4.0, 5.1
 
 USAGE
@@ -60,7 +53,8 @@ THANKS TO
 	Waldemar Brodkorb <wbx@openadk.org>
 
 	I express deep gratitude to Hewlett Packard AO Russia and personally to
-	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation
+	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation 
+	where HP-UX port was created.
 
-August, 10, 2022
+December, 31, 2022
 Mikhail Zakharov <zmey20000@yahoo.com>

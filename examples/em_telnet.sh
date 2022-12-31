@@ -5,20 +5,20 @@
 # Copyright (C) 2005, 2006 Mikhail E. Zakharov
 #
 
-telnet="telnet"				# (/full/path/to/)telnet
-target="localhost"			# target telnet-host
-login="luser" 				# username (Change it!)
-password="TopSecret"			# password (Change it!)
+telnet="telnet"						# (/full/path/to/)telnet
+target="localhost"					# target telnet-host
+login="luser" 						# username (Change it!)
+password="TopSecret"				# password (Change it!)
 
-fifo_in="/tmp/empty.in"			# input fifo
-fifo_out="/tmp/empty.out"		# output
+fifo_in="/tmp/empty.in"				# input fifo
+fifo_out="/tmp/empty.out"			# output
 
 # telnet command examples. Chose one:
 telnet_cmd="$telnet -K $target"		# connect FreeBSD from FreeBSD (SRA)
 #telnet_cmd="$telnet $target"		# All other OSes
 
 # -----------------------------------------------------------------------------
-tmp="/tmp/empty.tmp"			# tempfile to store result
+tmp="/tmp/empty.tmp"				# tempfile to store result
 
 echo "Starting empty"
 empty -f -i $fifo_in -o $fifo_out -L $tmp $telnet_cmd

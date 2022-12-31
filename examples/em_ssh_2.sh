@@ -6,9 +6,9 @@
 # Copyright (C) 2005, 2006 Mikhail E. Zakharov
 #
 
-ssh="ssh"				# (/full/path/to/)ssh
-target="localhost"			# target host
-login="luser"				# username (Change it!)
+ssh="ssh"						# (/full/path/to/)ssh
+target="localhost"				# target host
+login="luser"					# username (Change it!)
 password="TopSecret"			# password (Change it!)
 
 # -----------------------------------------------------------------------------

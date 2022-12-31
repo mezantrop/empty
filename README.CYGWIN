@@ -1,4 +1,4 @@
-To run empty on Cygwin Linux-like environment you have to do make this steps:
+To run empty on Cygwin Linux-like environment you have to do this steps:
 
 1. Download and install cygserver (http://www.cygwin.com/cygwin-ug-net/using-cygserver.html)
 2. Run /usr/bin/cygserver-config to configure cygserver

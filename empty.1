@@ -1,10 +1,10 @@
-.TH empty 1 "March, 05 2006"
+.TH empty 1 "December, 31 2022"
 .SH NAME
 empty \- run processes under pseudo-terminal sessions
 .SH SYNOPSIS
 .br
 .B empty
-\-f [\-i fifo1 \-o fifo2] [-p file.pid] [\-L file.log] command [command args]
+\-f [\-i fifo1 \-o fifo2] [\-p file.pid] [\-L file.log] [-e] command [command args]
 .br
 .B empty
 \-w [\-Sv] [\-t n] [\-i fifo2 \-o fifo1] key1 [answer1] ... [keyX answerX]
@@ -25,9 +25,9 @@ empty \- run processes under pseudo-terminal sessions
 \-h
 .SH DESCRIPTION
 .B empty
-is an utility that provides a simple interface to execute and/or interact with processes under pseudo-terminal sessions. This tool is definitely useful in programming of shell scripts which are used to communicate with interactive programs like telnet or ftp. In some cases
+is an utility that provides a simple interface to processes executed under pseudo-terminal sessions. This tool is definitely useful in programming of shell scripts which are used to communicate with interactive command-line programs. In some cases
 .B empty
-can be a substitution for TCL/expect or other similar programming tools.
+can be a lightweight replacement TCL/expect or other similar programming tools.
 .PP
 There are several common forms of command lines for
 .B empty.
@@ -40,19 +40,19 @@ a new
 (process) under PTY-session. This can be done with 
 .B \-f
 key. 
-An interface for the input and output data channels of the forked process is performed by two fifo files which names may be specified with
+An interface for the input and output data channels of the forked process is made by two fifo-files which names may be specified with
 .B \-i 
 and 
 .B \-o 
 keys. These files are automatically created/deleted any time you start/exit
 .B empty
-daemon, so you must not create them manually. If you did not specify these fifo files in the command line,
+daemon, so there is no need to create them manually. If these fifo-files are not specified in the command line,
 .B empty
-names them by itself basing on its PID and PID of forked PTY process.
+names them by itself basing on its PID and PID of the forked PTY process.
 .PP
-At this point any application can easily communicate with forked process by writing data to the input fifo and reading answers from the output fifo, see
+At this point any application can easily communicate with forked process by writing data to the input fifo- and reading answers from the output fifo- files, see
 .B EXAMPLES 
-section for the details. To simplify this operations,
+section for details. To simplify this operations,
 .B empty
 offers an interfase to just
 .B send
@@ -60,24 +60,24 @@ any data (use
 .B \-s
 key), or even to 
 .B watch
-the output fifo for multiple 
+the output fifo- for multiple 
 .B keyphrases
-and reply to the input fifo with one of the
+and reply to the input fifo- file with one of the
 .B responses
 (see
 .B \-w
 key).
 .PP
 .B Note!
-Input fifo for
+Input fifo- for
 .B empty -f ...
-is usually an output fifo for
+is usually an output fifo- file for
 .B empty -w 
 and 
 .B empty -s
-forms. And output fifo of
+forms. And output fifo- of
 .B empty -f ...
-is an input fifo for
+is an input fifo-file for
 .B empty -w ...
 .PP
 If something goes wrong the forked process may be 
@@ -95,7 +95,7 @@ The following options are available:
 \-f
 fork, spawn, start or execute a new process specified by the
 .B command
-and its arguments. If you omit fifo files,
+and its arguments. If you omit fifo-files,
 .B empty
 with its job control algorithm will create them under /tmp directory using this templates: empty.PPID.PID.in and empty.PPID.PID.out, here PPID is usually your shell system process ID and PID is system process ID of empty-daemon.
 .TP
@@ -129,20 +129,20 @@ key
 returns the number of matched keyphrase-response pair, or 255 if fails to find this match (see -t key for details of possible exit on timeout).
 .TP
 \-r
-read from output FIFO one line (default) or one block of data (if 
+read from output fifo-file one line (default) or one block of data (if 
 .B \-b size 
 was specified). If 
 .B \-t n
 key was placed, exit on timeout.
 .TP
 \-l
-list automatically created jobs by your shell.
+list automatically created jobs.
 .B NB!
-Your custom jobs, which fifo files you specified with 
+Custom jobs, which fifo-files specified with 
 .B \-i 
 and
 .B \-o
-keys, are not displayed. So if you did not specify fifo files with
+keys, are not displayed. So if none fifo-files are specified with
 .B -i
 and 
 .B -o 
@@ -155,7 +155,7 @@ send
 .B signal
 to the process with
 .B pid.
-If you did not specify pid, 
+If pid is not specified, 
 .B empty
 tries to find it within the list of automatically created jobs. If
 .B signal
@@ -165,21 +165,26 @@ is omitted the default SIGTERM is used.
 print short help message and exit
 .TP
 \-i fifo1
-a fifo file, which is used as input for a forked process.
+a fifo-file, which is used as input for a forked process.
 .TP
 \-o fifo2
-a fifo file, which is used as output for a forked process.
+a fifo-file, which is used as output for a forked process.
 .TP
 \-L file.log
 This option allows to log the whole
 .B empty
 session to a file. Marks >>> and <<< show the directions of data flow.
 .TP
+\-e
+forces 
+.B empty
+to keep output fifo-alive alive if some data left in it
+.TP
 \-p file.pid
 Save PID of empty daemon process to a file
 .TP
 \-t n
-If input FIFO is empty, wait for n seconds (default is 10) to receive the
+If input fifo-file is empty, wait for n seconds (default is 10) to receive the
 .B
 keyphrase
 then exit on timeout with 255 code.

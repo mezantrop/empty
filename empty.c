@@ -99,12 +99,13 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <time.h>
+#include <poll.h>
 
 #include <regex.h>
 
 #define tmpdir "/tmp"
 #define program "empty"
-#define version "0.6.22b"
+#define version "0.6.23b"
 
 /* -------------------------------------------------------------------------- */
 static void usage(void);
@@ -120,51 +121,52 @@ int longargv(int argc, char *argv[]);
 int checkgr(int argc, char *argv[], char *buf, int chkonly);
 int regmatch(const char *string, char *pattern, regex_t *re);
 int watch4str(int ifd, int ofd, int argc, char *argv[],
-		int Sflg, int vflg, int cflg, int timeout);
+	int Sflg, int vflg, int cflg, int timeout);
 int parsestr(char *dst, char *src, int len, int Sflg);
 
 /* -------------------------------------------------------------------------- */
-int     master, slave;
-int	child;
+int master, slave;
+int child;
 long pid = -1;
-char	*in = NULL, *out = NULL, *sl = NULL, *pfile = NULL;
-int	ifd, ofd, lfd = 0, pfd = 0;
-FILE	*pf;
-int	status;
-char	buf[BUFSIZ];
-fd_set	rfd;
-char	*argv0 = NULL;
-int	sem = -1;
+char *in = NULL, *out = NULL, *sl = NULL, *pfile = NULL;
+int ifd, ofd, lfd = 0, pfd = 0;
+FILE *pf;
+int status;
+char buf[BUFSIZ];
+fd_set rfd;
+char *argv0 = NULL;
+int sem = -1;
 struct sembuf free_sem = {0, 1, 0};
+int eflg = 0;					/* Do not exit until smth left in output-fifo */
 
 /* -------------------------------------------------------------------------- */
 int main (int argc, char *argv[]) {
-	struct	winsize win;
-	struct	termios tt;
-	int	i, bl, cc, n, ch;
-	int	fflg = 0;		/* spawn, fork */
-	int	wflg = 0;		/* watch for string [respond] */
-	int	sflg = 0;		/* send */
-	int	kflg = 0;		/* kill */
-	int	lflg = 0;		/* list your jobs */
-	int	iflg = 0;		/* in */
-	int	oflg = 0;		/* out */
-	int	Sflg = 0;		/* Strip last character from input */
-	int	cflg = 0;		/* use stdin instead of FIFO */
-	int	vflg = 0;		/* kvazi verbose mode OFF */
-	int	timeout = 10;		/* wait N secs for the responce */
-	int	Lflg = 0;		/* Log empty session */
-	int	rflg = 0;		/* recv output */
-	int	bflg = 0;		/* block size for -r flag */
-	int	tflg = 0;		/* Timeout flag for -b (timeout?) */
-	int	pflg = 0;		/* Shall we save PID to a file? */
-	long	bs = 1;
+	struct winsize win;
+	struct termios tt;
+	int i, bl, cc, n, ch;
+	int fflg = 0;				/* spawn, fork */
+	int wflg = 0;				/* watch for string [respond] */
+	int sflg = 0;				/* send */
+	int kflg = 0;				/* kill */
+	int lflg = 0;				/* list your jobs */
+	int iflg = 0;				/* in */
+	int oflg = 0;				/* out */
+	int Sflg = 0;				/* Strip last character from input */
+	int cflg = 0;				/* use stdin instead of FIFO */
+	int vflg = 0;				/* kvazi verbose mode OFF */
+	int timeout = 10;			/* wait N secs for the responce */
+	int Lflg = 0;				/* Log empty session */
+	int rflg = 0;				/* recv output */
+	int bflg = 0;				/* block size for -r flag */
+	int tflg = 0;				/* Timeout flag for -b (timeout?) */
+	int pflg = 0;				/* Shall we save PID to a file? */
+	long bs = 1;
 
-	int	ksig = SIGTERM;
+	int ksig = SIGTERM;
 
-	pid_t	ppid;			/* Shell's PID */
-	char	infifo[MAXPATHLEN];
-	char	outfifo[MAXPATHLEN];
+	pid_t ppid;					/* Shell's PID */
+	char infifo[MAXPATHLEN];
+	char outfifo[MAXPATHLEN];
 
 	struct sembuf check_sem = {0, -1, 0};
 	key_t sem_key;
@@ -173,9 +175,7 @@ int main (int argc, char *argv[]) {
 	time_t	stime, ntime;
 	struct	timeval tv;
 
-	int	fl_state = 2;		/* 0 - in	>>>
-					   1 - out	<<<
-					   2 - unknown */
+	int	fl_state = 2;			/* 0 - in ">>>"; 1 - out "<<<"; 2 - unknown */
 
 /* semaphores */
 /* Thanks to Waldemar Brodkorb <wbx@openadk.org> for the fix of semaphores nature */
@@ -205,9 +205,9 @@ int main (int argc, char *argv[]) {
 #endif
 
 #ifndef __linux__
-	while ((ch = getopt(argc, argv, "Scvhfrb:kwslp:i:o:t:L:")) != -1)
+	while ((ch = getopt(argc, argv, "Scvhfrb:kwslp:i:o:t:L:e")) != -1)
 #else
-	while ((ch = getopt(argc, argv, "+Scvhfrb:kwslp:i:o:t:L:")) != -1)
+	while ((ch = getopt(argc, argv, "+Scvhfrb:kwslp:i:o:t:L:e")) != -1)
 #endif
 		switch (ch) {
 			case 'f':
@@ -264,6 +264,10 @@ int main (int argc, char *argv[]) {
 				sl = optarg;
 				Lflg = 1;
 				break;
+			case 'e':
+				/* Do not exit empty until something left in output-fifo */
+				eflg = 1;
+				break;
 			case 'c':
 				/* use stdin instead of FIFO */
 				cflg = 1;
@@ -289,7 +293,8 @@ int main (int argc, char *argv[]) {
 
 	ppid = getppid();
 
-	if (kflg) {	/* kill PID with the SIGNAL */
+	/* kill PID with the SIGNAL */
+	if (kflg) {
 
 		if (argv[0]) {
 			if ((pid = toint(argv[0])) < 0) {
@@ -315,7 +320,8 @@ int main (int argc, char *argv[]) {
 		(void)exit(0);
 	}
 
-	if (sflg) {	/* we want to send */
+	/* we want to send */
+	if (sflg) {
 		if (!oflg) {
 			if ((pid = pidbyppid(ppid, lflg)) > 0) {
 				snprintf(outfifo, sizeof(outfifo), "%s/%s.%ld.%ld.in",
@@ -361,14 +367,15 @@ int main (int argc, char *argv[]) {
 		FD_ZERO(&rfd);
 
 		stime = time(0);
-        	tv.tv_sec = timeout;
-	        tv.tv_usec = 0;
+		tv.tv_sec = timeout;
+		tv.tv_usec = 0;
 
-		cc = -1; while (cc != 0) {
+		cc = -1; 
+		while (cc != 0) {
 			FD_SET(ifd, &rfd);
 			n = select(ifd + 1, &rfd, 0, 0, &tv);
 #ifdef __linux__
-			tv.tv_sec = timeout;	//fix because struct was set to 0; thanks "David Hofstee" <davidh@blinker.nl>
+			tv.tv_sec = timeout;	/* fix because struct was set to 0; thanks "David Hofstee" <davidh@blinker.nl> */
 #endif
 			if (n < 0 && errno != EINTR)
 				perrx(255, "Fatal select()");
@@ -401,7 +408,7 @@ int main (int argc, char *argv[]) {
 	if (argc == 0)
 		(void)usage();
 
-        /* Otpion -w in order to get keyphrases and send responses */
+	/* Otpion -w in order to get keyphrases and send responses */
 	if (wflg) {
 		if (!iflg && !oflg) {
 			if ((pid = pidbyppid(ppid, lflg)) > 0) {
@@ -432,7 +439,7 @@ int main (int argc, char *argv[]) {
 	argv0 = argv[0];
 
 	(void)tcgetattr(STDIN_FILENO, &tt);
-        (void)ioctl(STDIN_FILENO, TIOCGWINSZ, &win);
+	(void)ioctl(STDIN_FILENO, TIOCGWINSZ, &win);
 
 	if ((sem_key = ftok(sem_file, getpid())) == -1)
 		(void)perrxslog(255, "Can't generate semaphore key from file %s %m", sem_file);
@@ -459,15 +466,15 @@ int main (int argc, char *argv[]) {
 
 	if ((pid = fork()) == -1)
 		(void)perrxslog(255, "Daemonizing failed. Fatal second fork");
-        /* Fork does not work properly */
+
 	if (pid > 0)
 		(void)exit(0);
+
 	pid = getpid();				/* MY PID */
 
 	if (pflg) {
 		if ((pfd = open(pfile, O_CREAT|O_WRONLY, S_IRWXU)) == -1)
-			(void)syslog(LOG_NOTICE,
-				     "Warning: Can't write pid-file %s %m", pfile);
+			(void)syslog(LOG_NOTICE, "Warning: Can't write pid-file %s %m", pfile);
 
 		pf = fdopen(pfd, "w");
 		fprintf(pf, "%ld\n", (long)pid);
@@ -483,8 +490,7 @@ int main (int argc, char *argv[]) {
 
 	if (Lflg)
 		if ((lfd = open(sl, O_CREAT|O_WRONLY|O_APPEND, S_IRWXU)) == -1)
-			(void)syslog(LOG_NOTICE,
-				"Warning: Can't open %s for session-log %m", sl);
+			(void)syslog(LOG_NOTICE, "Warning: Can't open %s for session-log %m", sl);
 
 	if ((ifd = mfifo(in, O_RDWR)) == -1 && errno != ENXIO)
 		(void)perrxslog(255, "Fatal creating FIFO: %s", in);
@@ -526,17 +532,24 @@ int main (int argc, char *argv[]) {
 	#endif
 #endif /* !defined(__SVR4) && !defined(__hpux__) && !defined(__AIX) */
 
-	for (i = 1; i < 32; i++)
-		signal(i, fsignal);	/* hook signals */
+	/* hook only required signals */
+	signal(SIGHUP, fsignal);
+	signal(SIGTERM, fsignal);
+	signal(SIGINT, fsignal);
+	signal(SIGQUIT, fsignal);
+	signal(SIGCHLD, fsignal);
 
 	if ((child = fork()) < 0) {
 		(void)clean();
 		(void)perrxslog(255, "Fatal fork at creating desired process");
 	}
 
-	/* If this is the main process : launch with -f */
+	/* If this is the child process: launch an application with -f */
 	if (child == 0) {
 		(void)close(master);
+		(void)close(ifd);
+		(void)close(ofd);
+		(void)close(lfd);
 
 #if !defined(__SVR4) && !defined(__hpux__) && !defined(__AIX)
 		login_tty(slave);
@@ -557,19 +570,19 @@ int main (int argc, char *argv[]) {
 	#endif
 		/* Duplicate open file descriptor */
 		dup2(slave, 0);
-	       	dup2(slave, 1);
-	       	dup2(slave, 2);
+		dup2(slave, 1);
+		dup2(slave, 2);
 
 		/* Set foreground the main process */
 		if (tcsetpgrp(0, pgrp) == -1)
-	  	  (void)perrxslog(255, "Fatal tcsetpgrp()");
+			(void)perrxslog(255, "Fatal tcsetpgrp()");
 
 #endif
 
 #if defined(__SVR4) || defined(__AIX)
 		/* Setup terminal parameters for Solaris to work under cron or java.
 		Thanks to "lang qiu" <qiulang@gmail.com> for the initial line of parameters.
-	       	and the same for AIX 5.3 by Ralf Winkel */
+		and the same for AIX 5.3 by Ralf Winkel */
 		tt.c_lflag = ISIG | ICANON | ECHOE | ECHOK | ECHOCTL | ECHOKE | IEXTEN;
 		tt.c_oflag = TABDLY | OPOST;
 		tt.c_iflag = BRKINT | IGNPAR | ISTRIP | ICRNL | IXON | IMAXBEL;
@@ -593,12 +606,11 @@ int main (int argc, char *argv[]) {
 
 		(void)syslog(LOG_NOTICE, "Failed loading %s: %m", buf);
 
-		(void)clean();
 		(void)kill(0, SIGTERM);
 		(void)exit(0);
 	}
 
-	/* If this is the forked process */
+	/* This is the parent process to contol traffic on pty */
 	FD_ZERO(&rfd);
 	for (;;) {
 		FD_SET(master, &rfd);
@@ -619,7 +631,7 @@ int main (int argc, char *argv[]) {
 					}
 				}
 
-			if (FD_ISSET(master, &rfd))
+			if (FD_ISSET(master, &rfd)) {
 				if ((cc = read(master, buf, sizeof(buf))) > 0) {
 					/* remote output */
 					(void)write(ofd, buf, cc);
@@ -631,6 +643,7 @@ int main (int argc, char *argv[]) {
 						(void)write(lfd, buf, cc);
 					}
 				}
+			}
 		}
 	}
 /* 	This never reached */
@@ -641,7 +654,7 @@ int main (int argc, char *argv[]) {
 static void usage(void) {
 	(void)fprintf(stderr,
 "%s-%s usage:\n\
-empty -f [-i fifo1 -o fifo2] [-p file.pid] [-L file] command [command args]\n\
+empty -f [-i fifo1 -o fifo2] [-p file.pid] [-L file.log] [-e] command [command args]\n\
 empty -w [-Sv] [-t n] [-i fifo2 -o fifo1] key1 [answer1] ... [keyX answerX]\n\
 empty -s [-Sc] [-o fifo1] [request]\n\
 empty -r [-b size] [-t n] [-i fifo1]\n\
@@ -730,8 +743,8 @@ void wait4child(int child, char *argv0) {
 /* -------------------------------------------------------------------------- */
 int mfifo(char *fname, int mode) {
 
-   if (mkfifo(fname, S_IFIFO|S_IRWXU) == -1)
-          return -1;
+	if (mkfifo(fname, S_IFIFO|S_IRWXU) == -1)
+		return -1;
 
    return open(fname, mode);
 
@@ -739,12 +752,22 @@ int mfifo(char *fname, int mode) {
 
 /* -------------------------------------------------------------------------- */
 void clean(void) {
+	struct pollfd pofd;
+
+
 	(void)close(master);
-       	(void)close(ifd);
-       	(void)close(ofd);
-       	(void)close(lfd);
+	(void)close(ifd);
+	(void)close(lfd);
 	(void)unlink(in);
+	
+	if (eflg) {
+		pofd.fd = ofd;
+		pofd.events = POLLIN;
+		while (poll(&pofd, 1, 0) == 1) usleep(100000);
+	}
+	(void)close(ofd);
 	(void)unlink(out);
+
 	(void)unlink(pfile);
 }
 
@@ -791,11 +814,11 @@ void fsignal(int sig) {
 		case SIGINT:
 		case SIGQUIT:
 		case SIGSEGV:
+		default:
 			break;
 		case SIGCHLD:
 			wait4child(child, argv0);
-			(void)syslog(LOG_NOTICE,
-				"version %s finished", version);
+			(void)syslog(LOG_NOTICE, "version %s finished", version);
 	}
 
 	(void)clean();
@@ -821,7 +844,7 @@ int longargv(int argc, char *argv[]) {
 
 /* -------------------------------------------------------------------------- */
 int checkgr(int argc, char *argv[], char *buf, int chkonly) {
-	int	i;
+	int i;
 	regex_t re;
 
 	for (i = 1; i <= argc; i++) {
@@ -830,21 +853,21 @@ int checkgr(int argc, char *argv[], char *buf, int chkonly) {
 
 		if (chkonly != 1)
 			switch (regmatch(buf, argv[i - 1], &re)) {
-				case 1:	/* match */
+				case 1:			/* match */
 					return i;
-				case 0:	/* not found, check next key */
+				case 0:			/* not found, check next key */
 					if ((i + 1) <= argc)
 						i++;
 					break;
 			}
 	}
 
-	return 0;	/* nothing found */
+	return 0;					/* nothing found */
 }
 
 /* -------------------------------------------------------------------------- */
 int regmatch(const char *string, char *pattern, regex_t *re) {
-	int	status;
+	int status;
 
 	/* regcomp() is not needed as it was previously executed by checkgr() */
 	status = regexec(re, string, (size_t) 0, NULL, 0);
@@ -861,20 +884,20 @@ int regmatch(const char *string, char *pattern, regex_t *re) {
 			(void)perrx(255, "Regex execution failed");
 	}
 
- 	return(255);	/* Not reached */
+ 	return(255);				/* Not reached */
 }
 
 /* -------------------------------------------------------------------------- */
 int watch4str(int ifd, int ofd, int argc, char *argv[],
-		int Sflg, int vflg, int cflg, int timeout) {
+	int Sflg, int vflg, int cflg, int timeout) {
 
-	int	n, cc, bl;
-	time_t	stime, ntime;
-	struct	timeval tv;
+	int n, cc, bl;
+	time_t stime, ntime;
+	struct timeval tv;
 
-	int	argt = 0;
-	int	largv = 0;
-	char	*resp = NULL;
+	int argt = 0;
+	int largv = 0;
+	char *resp = NULL;
 
 
 	stime = time(0);
@@ -922,8 +945,7 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 			if (cc <= 0) {
 				/* Got EOF or ERROR */
 				if (vflg)
-					(void)fprintf(stderr, "%s: Got nothing in output\n",
-						program);
+					(void)fprintf(stderr, "%s: Got nothing in output\n", program);
 				return 255;
 			}
 		}
@@ -931,8 +953,7 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 		ntime = time(0);
 		if ((ntime - stime) >= timeout) {
 			(void)fprintf(stderr,
-				"%s: Data stream is empty. Keyphrase wasn't found. Exit on timeout\n",
-				program);
+				"%s: Data stream is empty. Keyphrase wasn't found. Exit on timeout\n", program);
 			return 255;
 		}
 	}
@@ -968,5 +989,3 @@ int parsestr(char *dst, char *src, int len, int Sflg) {
 
 	return bi;
 }
-
-/* -------------------------------------------------------------------------- */
