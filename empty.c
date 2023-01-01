@@ -759,8 +759,8 @@ void clean(void) {
 
 
 	(void)close(master);
-	(void)close(ifd);
 	(void)close(lfd);
+	(void)close(ifd);
 	(void)unlink(in);
 	
 	if (eflg) {
@@ -774,8 +774,7 @@ void clean(void) {
 	}
 	(void)close(ofd);
 	(void)unlink(out);
-
-	(void)unlink(pfile);
+	if (pfile) (void)unlink(pfile);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -826,6 +825,7 @@ void fsignal(int sig) {
 		case SIGCHLD:
 			wait4child(child, argv0);
 			(void)syslog(LOG_NOTICE, "version %s finished", version);
+			break;
 	}
 
 	(void)clean();
@@ -854,19 +854,20 @@ int checkgr(int argc, char *argv[], char *buf, int chkonly) {
 	int i;
 	regex_t re;
 
-	for (i = 1; i <= argc; i++) {
+	for (i = 1; i < argc; i++) {
 		if (regcomp(&re, argv[i - 1], REG_EXTENDED | REG_NOSUB) != 0)
 			(void)perrx(255, "Regex compilation failed");
-
 		if (chkonly != 1)
 			switch (regmatch(buf, argv[i - 1], &re)) {
 				case 1:			/* match */
 					return i;
 				case 0:			/* not found, check next key */
-					if ((i + 1) <= argc)
+					if ((i + 1) < argc)
 						i++;
 					break;
 			}
+		else
+			i++;
 	}
 
 	return 0;					/* nothing found */

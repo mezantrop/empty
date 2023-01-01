@@ -2,6 +2,7 @@
 --------------------------------------------------------------------------------
 * Keys [-e] forces empty with optinal timeout [-t n] to keep output fifo-alive 
 	alive if some data left in it
+* [-w] regex compilation error fix
 * Minor fixes
 * Documentation update
 
