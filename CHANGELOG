@@ -1,6 +1,7 @@
 31.12.2022 0.6.23b
 --------------------------------------------------------------------------------
-* -e option forces empty to keep output fifo-alive alive if some data left in it
+* Keys [-e] forces empty with optinal timeout [-t n] to keep output fifo-alive 
+	alive if some data left in it
 * Minor fixes
 * Documentation update
 

@@ -138,6 +138,9 @@ char *argv0 = NULL;
 int sem = -1;
 struct sembuf free_sem = {0, 1, 0};
 int eflg = 0;					/* Do not exit until smth left in output-fifo */
+int tflg = 0;					/* Timeout flag for -b (timeout?) */
+int timeout = 10;				/* wait N secs for the responce */
+
 
 /* -------------------------------------------------------------------------- */
 int main (int argc, char *argv[]) {
@@ -154,11 +157,9 @@ int main (int argc, char *argv[]) {
 	int Sflg = 0;				/* Strip last character from input */
 	int cflg = 0;				/* use stdin instead of FIFO */
 	int vflg = 0;				/* kvazi verbose mode OFF */
-	int timeout = 10;			/* wait N secs for the responce */
 	int Lflg = 0;				/* Log empty session */
 	int rflg = 0;				/* recv output */
 	int bflg = 0;				/* block size for -r flag */
-	int tflg = 0;				/* Timeout flag for -b (timeout?) */
 	int pflg = 0;				/* Shall we save PID to a file? */
 	long bs = 1;
 
@@ -654,7 +655,7 @@ int main (int argc, char *argv[]) {
 static void usage(void) {
 	(void)fprintf(stderr,
 "%s-%s usage:\n\
-empty -f [-i fifo1 -o fifo2] [-p file.pid] [-L file.log] [-e] command [command args]\n\
+empty -f [-i fifo1 -o fifo2] [-p file.pid] [-L file.log] [-e [-t n]] command [command args]\n\
 empty -w [-Sv] [-t n] [-i fifo2 -o fifo1] key1 [answer1] ... [keyX answerX]\n\
 empty -s [-Sc] [-o fifo1] [request]\n\
 empty -r [-b size] [-t n] [-i fifo1]\n\
@@ -753,6 +754,8 @@ int mfifo(char *fname, int mode) {
 /* -------------------------------------------------------------------------- */
 void clean(void) {
 	struct pollfd pofd;
+	int ptime = 100000;			/* Microseconds */
+	int c = 0;
 
 
 	(void)close(master);
@@ -763,7 +766,11 @@ void clean(void) {
 	if (eflg) {
 		pofd.fd = ofd;
 		pofd.events = POLLIN;
-		while (poll(&pofd, 1, 0) == 1) usleep(100000);
+		while (poll(&pofd, 1, 0) == 1) {
+			if (tflg && (c += ptime >= ptime * 10 * timeout))
+				break;
+			usleep(ptime);
+		}
 	}
 	(void)close(ofd);
 	(void)unlink(out);

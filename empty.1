@@ -4,7 +4,7 @@ empty \- run processes under pseudo-terminal sessions
 .SH SYNOPSIS
 .br
 .B empty
-\-f [\-i fifo1 \-o fifo2] [\-p file.pid] [\-L file.log] [-e] command [command args]
+\-f [\-i fifo1 \-o fifo2] [\-p file.pid] [\-L file.log] [-e [-t n]] command [command args]
 .br
 .B empty
 \-w [\-Sv] [\-t n] [\-i fifo2 \-o fifo1] key1 [answer1] ... [keyX answerX]
@@ -184,10 +184,12 @@ to keep output fifo-alive alive if some data left in it
 Save PID of empty daemon process to a file
 .TP
 \-t n
-If input fifo-file is empty, wait for n seconds (default is 10) to receive the
+If used with -w key. If input fifo-file is empty, wait for n seconds to receive the
 .B
 keyphrase
 then exit on timeout with 255 code.
+
+If used with -e key. Wait -n seconds before deleting non-empty output fifo-file if the forked process ended.
 .TP
 \-c
 force
