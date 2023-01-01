@@ -1,7 +1,7 @@
 /* empty - run processes under pseudo-terminal sessions
  *
- * Copyright (C) 2005-2022 Mikhail E. Zakharov
- * empty was written by Mikhail E. Zakharov. This software was based on the
+ * Copyright (C) 2005-2023 Mikhail Zakharov
+ * empty was written by Mikhail Zakharov. This software was based on the
  * basic idea of pty version 4.0 Copyright (c) 1992, Daniel J. Bernstein, but
  * no code was ported from pty4.
  *
