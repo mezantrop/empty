@@ -128,9 +128,9 @@ int parsestr(char *dst, char *src, int len, int Sflg);
 int master, slave;
 int child;
 long pid = -1;
-char *in = NULL, *out = NULL, *sl = NULL, *pfile = NULL;
-int ifd, ofd, lfd = 0, pfd = 0;
-FILE *pf;
+char *in = NULL, *out = NULL, *sl = NULL, *pfile = NULL, *xfile = NULL;
+int ifd, ofd, lfd = 0, pfd = 0, xfd = 0;
+FILE *pf, *xf;
 int status;
 char buf[BUFSIZ];
 fd_set rfd;
@@ -161,6 +161,7 @@ int main (int argc, char *argv[]) {
 	int rflg = 0;				/* recv output */
 	int bflg = 0;				/* block size for -r flag */
 	int pflg = 0;				/* Shall we save PID to a file? */
+	int	xflg = 0;				/* Shall we save Forked process PID to a file? */
 	long bs = 1;
 
 	int ksig = SIGTERM;
@@ -206,9 +207,9 @@ int main (int argc, char *argv[]) {
 #endif
 
 #ifndef __linux__
-	while ((ch = getopt(argc, argv, "Scvhfrb:kwslp:i:o:t:L:e")) != -1)
+	while ((ch = getopt(argc, argv, "Scvhfrb:kwslp:x:i:o:t:L:e")) != -1)
 #else
-	while ((ch = getopt(argc, argv, "+Scvhfrb:kwslp:i:o:t:L:e")) != -1)
+	while ((ch = getopt(argc, argv, "+Scvhfrb:kwslp:x:i:o:t:L:e")) != -1)
 #endif
 		switch (ch) {
 			case 'f':
@@ -238,6 +239,10 @@ int main (int argc, char *argv[]) {
 			case 'p':
 				pfile = optarg;
 				pflg = 1;
+				break;
+			case 'x':
+				xfile = optarg;
+				xflg = 1;
 				break;
 			case 'r':
 				rflg = 1;
@@ -613,6 +618,17 @@ int main (int argc, char *argv[]) {
 
 	/* This is the parent process to contol traffic on pty */
 	FD_ZERO(&rfd);
+
+	/* Save forked process' pid - usman@usmans.info */	
+	if (child > 0 && xflg) {
+		if ((xfd = open(xfile, O_CREAT|O_WRONLY, S_IRWXU)) == -1)
+			(void)syslog(LOG_NOTICE, "Warning: Can't write forked pid-file %s %m", xfile);
+
+		xf = fdopen(xfd, "w");
+		fprintf(xf, "%ld\n", (long)child);
+		fclose(xf);
+	}
+
 	for (;;) {
 		FD_SET(master, &rfd);
 		FD_SET(ifd, &rfd);
@@ -655,7 +671,7 @@ int main (int argc, char *argv[]) {
 static void usage(void) {
 	(void)fprintf(stderr,
 "%s-%s usage:\n\
-empty -f [-i fifo1 -o fifo2] [-p file.pid] [-L file.log] [-e [-t n]] command [command args]\n\
+empty -f [-i fifo1 -o fifo2] [-p file.pid] [-x file.pid] [-L file.log] [-e [-t n]] command [command args]\n\
 empty -w [-Sv] [-t n] [-i fifo2 -o fifo1] key1 [answer1] ... [keyX answerX]\n\
 empty -s [-Sc] [-o fifo1] [request]\n\
 empty -r [-b size] [-t n] [-i fifo1]\n\
@@ -689,8 +705,8 @@ long pidbyppid(pid_t ppid, int lflg) {
 	long pid = -1, maxpid = -1;
 	int header = 1;
 
-	/* form this line: empty.ppid */
-	sprintf(fmask, "%s%s%d", program, sep, ppid);
+	/* form this line: empty.ppid. */
+	sprintf(fmask, "%s%s%d.", program, sep, ppid);
 	len = strlen(fmask);
 
 	if ((dir = opendir(tmpdir)) == NULL)
@@ -699,7 +715,7 @@ long pidbyppid(pid_t ppid, int lflg) {
 	while ((dent = readdir(dir)) != NULL) {
 		if (!strncmp(fmask, dent->d_name, len)) {
 			strncpy(fname, dent->d_name, sizeof(fname) - 1);
-			fname[sizeof(buf) - 1] = '\0';
+			fname[MAXPATHLEN - 1] = '\0';
 
 			strtok(fname, sep);		/* empty */
 			strtok(NULL, sep);		/* PPID */
@@ -775,6 +791,7 @@ void clean(void) {
 	(void)close(ofd);
 	(void)unlink(out);
 	if (pfile) (void)unlink(pfile);
+	if (xfile) (void)unlink(xfile);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -904,9 +921,10 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 	struct timeval tv;
 
 	int argt = 0;
-	int largv = 0;
+	int bread = 0;
 	char *resp = NULL;
-
+	int found;
+	int i;
 
 	stime = time(0);
 	tv.tv_sec = timeout;
@@ -923,11 +941,10 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 			perrx(255, "Fatal select()");
 
 		if (n > 0 && FD_ISSET(ifd, &rfd)) {
-			largv = 0;
-			if ((cc = read(ifd, buf + largv, sizeof(buf) - largv)) > 0) {
+			if ((cc = read(ifd, buf + bread, sizeof(buf) - bread - 1)) > 0) {
 				stime = time(0);
 
-				buf[cc + largv] = '\0';
+				buf[cc + bread] = '\0';
 
 				if (vflg)
 					(void)printf("%s", buf);
@@ -944,10 +961,17 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 					return (argt + 1) / 2;
 				}
 
-				if (largv == 0)
-					largv = longargv(argc, argv);
+				for(found=0,i=bread; i<bread+cc; i++) {
+					if(buf[i] == '\n') {
+						memmove(buf, buf+i+1, bread+cc-i-1);
+						bread = bread + cc - i - 1;
+						found = 1;
+						break;
+					}
+				}
 
-				memmove(buf, buf + cc - largv, largv);
+				if(!found)
+					bread += cc;
 			}
 
 			if (cc <= 0) {
@@ -980,12 +1004,24 @@ int parsestr(char *dst, char *src, int len, int Sflg) {
 					dst[bi] = '\\';
 					i++;
 					break;
+				case 'c':							/* CTRL-C */
+                    dst[bi] = '\x03';
+                    i++;
+                    break;
+				case 'd':							/* CTRL-D */
+                    dst[bi] = '\x04';
+                    i++;
+                    break;
 				case 'n':
 					dst[bi] = '\n';
 					i++;
 					break;
 				case 'r':
 					dst[bi] = '\r';
+					i++;
+					break;
+				case '[':							/* ESC */
+					dst[bi] = '\x1B';
 					i++;
 					break;
 				default:

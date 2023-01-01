@@ -1,5 +1,20 @@
-31.12.2022 0.6.23b
+01.01.2023 0.6.23b
 --------------------------------------------------------------------------------
+Perhaps this is the slowest reaction in the world, sorry for leaving "empty" 
+aside for too long. This release fixes something that should have been fixed for
+years and years ago. Happy New Year 2023 and may there be no war.
+
+* Fixed: Keyphrase not detected and timeout: https://sourceforge.net/p/empty/bugs/6
+	Thanks Sergey Mironov https://sourceforge.net/u/ierton/profile
+* Fixed: Error when auto-selecting fifo file: https://sourceforge.net/p/empty/patches/7
+	Thanks Jérôme https://sourceforge.net/u/zizoujh/profile
+* Fixed: Two overflow compiler warning fixes: https://sourceforge.net/p/empty/patches/6
+	Thanks James Le Cuirot https://sourceforge.net/u/jerseychewi/profile
+* Add switch to save spawned process (child) pid: https://sourceforge.net/p/empty/patches/5
+	Thanks usman[at]usmans.info
+* Add Suppport for control characters: https://sourceforge.net/p/empty/feature-requests/1
+	Thanks Jay McConnell https://sourceforge.net/u/mccjay/profile and 
+	zemleroi https://sourceforge.net/u/zemleroi/profile
 * Keys [-e] forces empty with optinal timeout [-t n] to keep output fifo-alive 
 	alive if some data left in it
 * [-w] regex compilation error fix

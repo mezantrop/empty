@@ -4,7 +4,7 @@ empty \- run processes under pseudo-terminal sessions
 .SH SYNOPSIS
 .br
 .B empty
-\-f [\-i fifo1 \-o fifo2] [\-p file.pid] [\-L file.log] [-e [-t n]] command [command args]
+\-f [\-i fifo1 \-o fifo2] [\-p file.pid] [\-x file.pid] [\-L file.log] [-e [-t n]] command [command args]
 .br
 .B empty
 \-w [\-Sv] [\-t n] [\-i fifo2 \-o fifo1] key1 [answer1] ... [keyX answerX]
@@ -89,6 +89,8 @@ key of
 See
 .B \-p 
 option to save PID of empty daemon process.
+.B \-x 
+option to save forked child process PID.
 .PP
 The following options are available:
 .TP 12

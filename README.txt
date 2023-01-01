@@ -41,20 +41,26 @@ THANKS TO
 	Dennis Schridde
 	Dmitry S. Vlasov <vlasov@quantum.ru>
 	Elisender <allex_9@ngs.ru>
+	James Le Cuirot https://sourceforge.net/u/jerseychewi/profile
+	Jay McConnell https://sourceforge.net/u/mccjay/profile
+	Jérôme https://sourceforge.net/u/zizoujh/profile
 	Lang Qiu <qiulang@gmail.com>
 	Ralf Winkel
 	Roman Gorohov <idle@idle.org.ru>
 	sdio <sdio4lor @ gmail.com>
+	Sergey Mironov https://sourceforge.net/u/ierton/profile
 	Sergey Redin <sergey@redin.info>
 	Sergey V <flexdsl@mail.ru>
 	Sergey Yaroshevsky <astraserg@proc.ru>
+	usman[at]usmans.info
 	Sylvain DEGUT <sylvain.degut@neuf.fr>
 	Vincenzo Maggio <vince.maggio@gmail.com>
 	Waldemar Brodkorb <wbx@openadk.org>
+	zemleroi https://sourceforge.net/u/zemleroi/profile
 
 	I express deep gratitude to Hewlett Packard AO Russia and personally to
 	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation 
 	where HP-UX port was created.
 
-December, 31, 2022
+January, 1, 2023
 Mikhail Zakharov <zmey20000@yahoo.com>
