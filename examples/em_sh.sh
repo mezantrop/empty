@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# emsh.sh v.0.4
+# em_sh.sh v.0.4, 2005, 2006 Mikhail Zakharov
 # sh example for empty with job control and STDIN mode
-# Copyright (C) 2005, 2006 Mikhail E. Zakharov
-#
 
 # -----------------------------------------------------------------------------
 tmp="/tmp/empty.tmp"			# tempfile to store results

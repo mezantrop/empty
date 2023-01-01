@@ -596,7 +596,7 @@ int main (int argc, char *argv[]) {
 		buf[sizeof(buf) - 1] = '\0';
 
 		for (i = 1; i < argc; i++) {
-			strncat(buf, " ", 1);
+			strcat(buf, " ");
 			strncat(buf, argv[i], sizeof(buf) - strlen(buf) - 1);
 		}
 

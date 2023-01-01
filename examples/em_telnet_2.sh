@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# emtelnet.sh v.0.4 
+# em_telnet.sh v.0.4, 2005, 2006, 2023 Mikhail Zakharov
 # telnet example for empty
-# Copyright (C) 2005, 2006 Mikhail E. Zakharov
-#
 
 telnet="telnet"						# (/full/path/to/)telnet
 target="localhost"					# target telnet-host

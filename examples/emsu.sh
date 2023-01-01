@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# emsu.sh v.0.4
+# em_su.sh v.0.4, 2005, 2006, 2023 Mikhail Zakharov
 # su example for empty
-# Copyright (C) 2005, 2006 Mikhail E. Zakharov
-#
 
 password="RootPassword"			# password (Change it!)
 
