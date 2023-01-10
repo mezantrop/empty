@@ -1,3 +1,7 @@
+10.01.2023 0.6.23c
+--------------------------------------------------------------------------------
+* The [-t] timeout for [-e] flag works now correctly
+
 01.01.2023 0.6.23b
 --------------------------------------------------------------------------------
 Perhaps this is the slowest reaction in the world, sorry for leaving "empty" 

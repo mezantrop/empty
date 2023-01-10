@@ -1,4 +1,4 @@
-empty-0.6.23b -- run applications under pseudo-terminal (PTY) sessions and
+empty-0.6.23c -- run applications under pseudo-terminal (PTY) sessions and
 replace TCL/Expect with a simple tool under your favourite shell
 
 INSTALLATION
@@ -62,5 +62,5 @@ THANKS TO
 	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation 
 	where HP-UX port was created.
 
-January, 1, 2023
+January, 10, 2023
 Mikhail Zakharov <zmey20000@yahoo.com>

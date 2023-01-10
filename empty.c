@@ -105,7 +105,7 @@
 
 #define tmpdir "/tmp"
 #define program "empty"
-#define version "0.6.23b"
+#define version "0.6.23c"
 
 /* -------------------------------------------------------------------------- */
 static void usage(void);
@@ -174,8 +174,8 @@ int main (int argc, char *argv[]) {
 	key_t sem_key;
 	const char *sem_file = "/";
 
-	time_t	stime, ntime;
-	struct	timeval tv;
+	time_t stime, ntime;
+	struct timeval tv;
 
 	int	fl_state = 2;			/* 0 - in ">>>"; 1 - out "<<<"; 2 - unknown */
 
@@ -783,9 +783,10 @@ void clean(void) {
 		pofd.fd = ofd;
 		pofd.events = POLLIN;
 		while (poll(&pofd, 1, 0) == 1) {
-			if (tflg && (c += ptime >= ptime * 10 * timeout))
+			if (tflg && (c >= ptime * 10 * timeout))
 				break;
 			usleep(ptime);
+			c += ptime;
 		}
 	}
 	(void)close(ofd);
