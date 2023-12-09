@@ -35,15 +35,15 @@ But the first execution of
 .B empty
 is usually a start in the daemon mode to
 .B fork
-a new 
-.B command 
-(process) under PTY-session. This can be done with 
+a new
+.B command
+(process) under PTY-session. This can be done with
 .B \-f
-key. 
+key.
 An interface for the input and output data channels of the forked process is made by two fifo-files which names may be specified with
-.B \-i 
-and 
-.B \-o 
+.B \-i
+and
+.B \-o
 keys. These files are automatically created/deleted any time you start/exit
 .B empty
 daemon, so there is no need to create them manually. If these fifo-files are not specified in the command line,
@@ -51,16 +51,16 @@ daemon, so there is no need to create them manually. If these fifo-files are not
 names them by itself basing on its PID and PID of the forked PTY process.
 .PP
 At this point any application can easily communicate with forked process by writing data to the input fifo- and reading answers from the output fifo- files, see
-.B EXAMPLES 
+.B EXAMPLES
 section for details. To simplify this operations,
 .B empty
 offers an interfase to just
 .B send
 any data (use
 .B \-s
-key), or even to 
+key), or even to
 .B watch
-the output fifo- for multiple 
+the output fifo- for multiple
 .B keyphrases
 and reply to the input fifo- file with one of the
 .B responses
@@ -72,24 +72,24 @@ key).
 Input fifo- for
 .B empty -f ...
 is usually an output fifo- file for
-.B empty -w 
-and 
+.B empty -w
+and
 .B empty -s
 forms. And output fifo- of
 .B empty -f ...
 is an input fifo-file for
 .B empty -w ...
 .PP
-If something goes wrong the forked process may be 
+If something goes wrong the forked process may be
 .B killed
 by the standard kill command, or using
 .B \-k
 key of
 .B empty.
 See
-.B \-p 
+.B \-p
 option to save PID of empty daemon process.
-.B \-x 
+.B \-x
 option to save forked child process PID.
 .PP
 The following options are available:
@@ -105,7 +105,7 @@ with its job control algorithm will create them under /tmp directory using this 
 send data (request) to the forked process. If fifo file was not specitied with
 .B \-o
 key,
-.B empty 
+.B empty
 will try to find an automatically created fifo file it in /tmp directory. Instead of command line you can send your
 .B request
 or data directly to standard input (stdin) of
@@ -118,7 +118,7 @@ for one or more
 and if specified send the appropriated
 .B response
 to the input fifo.
-If 
+If
 .B response
 is not set,
 .B empty
@@ -131,33 +131,33 @@ key
 returns the number of matched keyphrase-response pair, or 255 if fails to find this match (see -t key for details of possible exit on timeout).
 .TP
 \-r
-read from output fifo-file one line (default) or one block of data (if 
-.B \-b size 
-was specified). If 
+read from output fifo-file one line (default) or one block of data (if
+.B \-b size
+was specified). If
 .B \-t n
 key was placed, exit on timeout.
 .TP
 \-l
 list automatically created jobs.
 .B NB!
-Custom jobs, which fifo-files specified with 
-.B \-i 
+Custom jobs, which fifo-files specified with
+.B \-i
 and
 .B \-o
 keys, are not displayed. So if none fifo-files are specified with
 .B -i
-and 
-.B -o 
-keys all 
+and
+.B -o
+keys all
 operations are done under the job marked
 .B current
 .TP
-\-k 
+\-k
 send
 .B signal
 to the process with
 .B pid.
-If pid is not specified, 
+If pid is not specified,
 .B empty
 tries to find it within the list of automatically created jobs. If
 .B signal
@@ -178,12 +178,15 @@ This option allows to log the whole
 session to a file. Marks >>> and <<< show the directions of data flow.
 .TP
 \-e
-forces 
+forces
 .B empty
 to keep output fifo-alive alive if some data left in it
 .TP
 \-p file.pid
 Save PID of empty daemon process to a file
+.TP
+\-x file.pid
+Save PID of the forked child process to a file
 .TP
 \-t n
 If used with -w key. If input fifo-file is empty, wait for n seconds to receive the
@@ -204,7 +207,7 @@ Strip the last character from the input. Works with -s and -w keys
 \-v
 kvazi verbose mode. Show all contents of received buffer.
 .SH EXAMPLES
-.TP 0 
+.TP 0
 Start a new PTY-session with telnet to localhost:
 .nf
 	empty -f -i in.fifo -o out.fifo -p empty.pid -L empty.log telnet localhost
@@ -235,10 +238,10 @@ Just cat output from telnet:
 .TP
 Read one line from out.fifo:
 .nf
-	empty \-r -i out.fifo 
+	empty \-r -i out.fifo
 .fi
 .TP
-Send commands to telnet with ordinary echo:
+Send commands to telnet using echo:
 .nf
 	echo "who am i" > in.fifo
 	echo "uname -a" > in.fifo
@@ -277,7 +280,7 @@ List automatically created jobs:
 .SH SECURITY
 It is considered insecure to send a password in the command line like this:
 .nf
-	
+
 	empty \-w assword 'my_password\\n'
 
 .fi
@@ -336,9 +339,9 @@ the way to make sure that your shell uses the builtin command.
 .SH RETURN VALUES
 If any error occurs
 .B empty
-usually exits with code 255. Otherwise zero or some positive value (see 
+usually exits with code 255. Otherwise zero or some positive value (see
 .B \-w
-key) is returned. 
+key) is returned.
 .SH SEE ALSO
 expect(1), chat(8)
 .SH AUTHOR
