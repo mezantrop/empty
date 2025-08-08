@@ -105,7 +105,7 @@
 
 #define tmpdir "/tmp"
 #define program "empty"
-#define version "0.6.23c"
+#define version "0.6.23d"
 
 /* -------------------------------------------------------------------------- */
 static void usage(void);
@@ -376,7 +376,7 @@ int main (int argc, char *argv[]) {
 		tv.tv_sec = timeout;
 		tv.tv_usec = 0;
 
-		cc = -1; 
+		cc = -1;
 		while (cc != 0) {
 			FD_SET(ifd, &rfd);
 			n = select(ifd + 1, &rfd, 0, 0, &tv);
@@ -619,7 +619,7 @@ int main (int argc, char *argv[]) {
 	/* This is the parent process to contol traffic on pty */
 	FD_ZERO(&rfd);
 
-	/* Save forked process' pid - usman@usmans.info */	
+	/* Save forked process' pid - usman@usmans.info */
 	if (child > 0 && xflg) {
 		if ((xfd = open(xfile, O_CREAT|O_WRONLY, S_IRWXU)) == -1)
 			(void)syslog(LOG_NOTICE, "Warning: Can't write forked pid-file %s %m", xfile);
@@ -778,7 +778,7 @@ void clean(void) {
 	(void)close(lfd);
 	(void)close(ifd);
 	(void)unlink(in);
-	
+
 	if (eflg) {
 		pofd.fd = ofd;
 		pofd.events = POLLIN;
@@ -872,9 +872,10 @@ int checkgr(int argc, char *argv[], char *buf, int chkonly) {
 	int i;
 	regex_t re;
 
-	for (i = 1; i < argc; i++) {
+	for (i = 1; i <= argc; i++) {
 		if (regcomp(&re, argv[i - 1], REG_EXTENDED | REG_NOSUB) != 0)
 			(void)perrx(255, "Regex compilation failed");
+
 		if (chkonly != 1)
 			switch (regmatch(buf, argv[i - 1], &re)) {
 				case 1:			/* match */
