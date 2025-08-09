@@ -126,7 +126,7 @@ int parsestr(char *dst, char *src, int len, int Sflg);
 
 /* -------------------------------------------------------------------------- */
 int master, slave;
-int child;
+int child = -1;
 long pid = -1;
 char *in = NULL, *out = NULL, *sl = NULL, *pfile = NULL, *xfile = NULL;
 int ifd, ofd, lfd = 0, pfd = 0, xfd = 0;
@@ -414,7 +414,7 @@ int main (int argc, char *argv[]) {
 	if (argc == 0)
 		(void)usage();
 
-	/* Otpion -w in order to get keyphrases and send responses */
+	/* Option -w in order to get keyphrases and send responses */
 	if (wflg) {
 		if (!iflg && !oflg) {
 			if ((pid = pidbyppid(ppid, lflg)) > 0) {
@@ -839,17 +839,21 @@ void fsignal(int sig) {
 		case SIGQUIT:
 		case SIGSEGV:
 		default:
+			if (child > 0)
+				kill(child, sig);
 			break;
 		case SIGCHLD:
 			wait4child(child, argv0);
-			(void)syslog(LOG_NOTICE, "version %s finished", version);
 			break;
 	}
 
-	(void)clean();
-	semop(sem, &free_sem, 1);
-	(void)closelog();
-	(void)exit(0);
+	if (kill(child, 0)) {
+		(void)clean();
+		semop(sem, &free_sem, 1);
+		(void)syslog(LOG_NOTICE, "version %s finished", version);
+		(void)closelog();
+		(void)exit(0);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
