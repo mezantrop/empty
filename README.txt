@@ -62,5 +62,5 @@ THANKS TO
 	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation
 	where HP-UX port was created.
 
-August, 8, 2025
+August, 9, 2025
 Mikhail Zakharov <zmey20000@yahoo.com>

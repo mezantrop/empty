@@ -117,11 +117,11 @@ void perrxslog(int ex_code, const char *err_text, ...);
 long pidbyppid(pid_t ppid, int lflg);
 void clean(void);
 void fsignal(int sig);
-int longargv(int argc, char *argv[]);
+int longargv(char *argv[]);
 int checkgr(int argc, char *argv[], char *buf, int chkonly);
-int regmatch(const char *string, char *pattern, regex_t *re);
+int regmatch(const char *string, regex_t *re);
 int watch4str(int ifd, int ofd, int argc, char *argv[],
-	int Sflg, int vflg, int cflg, int timeout);
+	int Sflg, int vflg, int timeout);
 int parsestr(char *dst, char *src, int len, int Sflg);
 
 /* -------------------------------------------------------------------------- */
@@ -436,7 +436,7 @@ int main (int argc, char *argv[]) {
 			(void)perrx(255, "Fatal open FIFO for writing: %s", out);
 
 		checkgr(argc, argv, NULL, 1);	/* check regexp syntax only */
-		(void)exit(watch4str(ifd, ofd, argc, argv, Sflg, vflg, cflg, timeout));
+		(void)exit(watch4str(ifd, ofd, argc, argv, Sflg, vflg, timeout));
 	}
 
 
@@ -853,7 +853,7 @@ void fsignal(int sig) {
 }
 
 /* -------------------------------------------------------------------------- */
-int longargv(int argc, char *argv[]) {
+int longargv(char *argv[]) {
 	int i = 0, len = 0, maxlen = 0;
 
 
@@ -877,7 +877,7 @@ int checkgr(int argc, char *argv[], char *buf, int chkonly) {
 			(void)perrx(255, "Regex compilation failed");
 
 		if (chkonly != 1)
-			switch (regmatch(buf, argv[i - 1], &re)) {
+			switch (regmatch(buf, &re)) {
 				case 1:			/* match */
 					return i;
 				case 0:			/* not found, check next key */
@@ -885,15 +885,17 @@ int checkgr(int argc, char *argv[], char *buf, int chkonly) {
 						i++;
 					break;
 			}
-		else
+		else {
 			i++;
+			regfree(&re);
+		}
 	}
 
 	return 0;					/* nothing found */
 }
 
 /* -------------------------------------------------------------------------- */
-int regmatch(const char *string, char *pattern, regex_t *re) {
+int regmatch(const char *string, regex_t *re) {
 	int status;
 
 	/* regcomp() is not needed as it was previously executed by checkgr() */
@@ -915,8 +917,8 @@ int regmatch(const char *string, char *pattern, regex_t *re) {
 }
 
 /* -------------------------------------------------------------------------- */
-int watch4str(int ifd, int ofd, int argc, char *argv[],
-	int Sflg, int vflg, int cflg, int timeout) {
+int watch4str(int ifd, int ofd,
+	int argc, char *argv[], int Sflg, int vflg, int timeout) {
 
 	int n, cc, bl;
 	time_t stime, ntime;
@@ -937,7 +939,7 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 		FD_SET(ifd, &rfd);
 		n = select(ifd + 1, &rfd, 0, 0, &tv);
 #ifdef __linux__
-		tv.tv_sec = timeout; //fix because struct was set to 0; thanks David Hofstee" <davidh@blinker.nl>
+		tv.tv_sec = timeout; /* thanks David Hofstee" <davidh@blinker.nl> */
 #endif
 		if (n < 0 && errno != EINTR)
 			perrx(255, "Fatal select()");
@@ -987,7 +989,8 @@ int watch4str(int ifd, int ofd, int argc, char *argv[],
 		ntime = time(0);
 		if ((ntime - stime) >= timeout) {
 			(void)fprintf(stderr,
-				"%s: Data stream is empty. Keyphrase wasn't found. Exit on timeout\n", program);
+				"%s: Data stream is empty. Keyphrase wasn't found. Exit on timeout\n",
+				program);
 			return 255;
 		}
 	}

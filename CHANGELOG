@@ -1,5 +1,7 @@
-10.01.2023 0.6.23d
+09.08.2025 0.6.23d
 --------------------------------------------------------------------------------
+* `checkgr()`: `regcomp()`/`regfree()` memory leak fixed
+* Code sanitized for unused variables
 * Fixed `empty -w` key error: `empty: Data stream is empty. Keyphrase wasn't found. Exit on timeout`
 
 10.01.2023 0.6.23c
