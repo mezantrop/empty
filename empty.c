@@ -1,6 +1,6 @@
 /* empty - run processes under pseudo-terminal sessions
  *
- * Copyright (C) 2005-2023 Mikhail Zakharov
+ * Copyright (C) 2005-2025 Mikhail Zakharov
  * empty was written by Mikhail Zakharov. This software was based on the
  * basic idea of pty version 4.0 Copyright (c) 1992, Daniel J. Bernstein, but
  * no code was ported from pty4.
@@ -132,7 +132,7 @@ char *in = NULL, *out = NULL, *sl = NULL, *pfile = NULL, *xfile = NULL;
 int ifd, ofd, lfd = 0, pfd = 0, xfd = 0;
 FILE *pf, *xf;
 int status;
-char buf[BUFSIZ];
+char buf[64 * 1024];			/* 64KB */
 fd_set rfd;
 char *argv0 = NULL;
 int sem = -1;
@@ -931,20 +931,19 @@ int watch4str(int ifd, int ofd,
 	int argt = 0;
 	int bread = 0;
 	char *resp = NULL;
-	int found;
-	int i;
+	char *nl = NULL;
+	int remain = 0;
 
 	stime = time(0);
-	tv.tv_sec = timeout;
-	tv.tv_usec = 0;
-
-	FD_ZERO(&rfd);
 	for (;;) {
+		FD_ZERO(&rfd);
 		FD_SET(ifd, &rfd);
+
+		tv.tv_sec = timeout;
+		tv.tv_usec = 0;
+
 		n = select(ifd + 1, &rfd, 0, 0, &tv);
-#ifdef __linux__
-		tv.tv_sec = timeout; /* thanks David Hofstee" <davidh@blinker.nl> */
-#endif
+
 		if (n < 0 && errno != EINTR)
 			perrx(255, "Fatal select()");
 
@@ -952,7 +951,8 @@ int watch4str(int ifd, int ofd,
 			if ((cc = read(ifd, buf + bread, sizeof(buf) - bread - 1)) > 0) {
 				stime = time(0);
 
-				buf[cc + bread] = '\0';
+				bread += cc;
+				buf[bread] = '\0';
 
 				if (vflg)
 					(void)printf("%s", buf);
@@ -969,21 +969,19 @@ int watch4str(int ifd, int ofd,
 					return (argt + 1) / 2;
 				}
 
-				for(found=0,i=bread; i<bread+cc; i++) {
-					if(buf[i] == '\n') {
-						memmove(buf, buf+i+1, bread+cc-i-1);
-						bread = bread + cc - i - 1;
-						found = 1;
-						break;
-					}
+				nl = memchr(buf, '\n', bread);
+				if (nl) {
+					remain = bread - (nl - buf + 1);
+					memmove(buf, nl + 1, remain);
+					bread = remain;
 				}
-
-				if(!found)
-					bread += cc;
 			}
 
-			if (cc <= 0) {
-				/* Got EOF or ERROR */
+			if (cc == 0)		/* EOF */
+				continue;
+
+			if (cc < 0) {
+				/* Got an ERROR */
 				if (vflg)
 					(void)fprintf(stderr, "%s: Got nothing in output\n", program);
 				return 255;
