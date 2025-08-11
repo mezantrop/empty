@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# em_ssh_2.sh v.0.6, 2005, 2006, 2023 Mikhail Zakharov
+# em_ssh_2.sh v.0.6, 2005, 2006, 2025 Mikhail Zakharov
 # ssh example for empty with job control, STDIN mode and session log
 
 ssh="ssh"						# (/full/path/to/)ssh
@@ -16,7 +16,8 @@ echo "Starting empty"
 empty -f -L $tmp $cmd
 if [ $? = 0 ]; then
 	echo "Sending Password"
-	empty -v -w "assword:" "$password\n" "assword" "$password\n"
+	empty -w -v "es" "yes\n" "assword" "$password\n"
+	empty -w -v "assword:" "$password\n" "assword" "$password\n"
 
 	echo "Sending tests"
         empty -s << EOF

@@ -1,11 +1,14 @@
-09.08.2025 0.6.23d
+11.08.2025 0.6.23d
 --------------------------------------------------------------------------------
+* Minor changes in the directory tree: some files renamed, others deleted
+* Thanks Joe https://github.com/exekutive for the work on https://github.com/mezantrop/empty/issues/2
+* Correct `struct timeval` reinitialization
 * Main buffer extended to 64 KiB
 * watch4str(): Fixed sliding buffer; improved EOF handling
 * fsignal(): cleaner, simpler, and correct implementation
 * checkgr(): fixed memory leak in regcomp()/regfree()
 * Code cleaned from unused variables
-* watch4str() (empty -w): fixed key error causing "Data stream is empty. Keyphrase wasn't found. Exit on timeout"
+* watch4str(): fixed the error causing "Data stream is empty. Keyphrase wasn't found. Exit on timeout"
 
 10.01.2023 0.6.23c
 --------------------------------------------------------------------------------

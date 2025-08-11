@@ -369,20 +369,17 @@ int main (int argc, char *argv[]) {
 		if ((ifd = open(in, O_RDONLY)) == -1)
 			(void)perrx(255, "Fatal open FIFO for reading: %s", in);
 
-
-		FD_ZERO(&rfd);
-
 		stime = time(0);
-		tv.tv_sec = timeout;
-		tv.tv_usec = 0;
-
 		cc = -1;
 		while (cc != 0) {
+			FD_ZERO(&rfd);
 			FD_SET(ifd, &rfd);
+
+			tv.tv_sec = timeout;
+			tv.tv_usec = 0;
+
 			n = select(ifd + 1, &rfd, 0, 0, &tv);
-#ifdef __linux__
-			tv.tv_sec = timeout;	/* fix because struct was set to 0; thanks "David Hofstee" <davidh@blinker.nl> */
-#endif
+
 			if (n < 0 && errno != EINTR)
 				perrx(255, "Fatal select()");
 

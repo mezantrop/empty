@@ -44,6 +44,7 @@ THANKS TO
 	James Le Cuirot https://sourceforge.net/u/jerseychewi/profile
 	Jay McConnell https://sourceforge.net/u/mccjay/profile
 	Jérôme https://sourceforge.net/u/zizoujh/profile
+	Joe https://github.com/exekutive
 	Lang Qiu <qiulang@gmail.com>
 	Ralf Winkel
 	Roman Gorohov <idle@idle.org.ru>
@@ -62,5 +63,5 @@ THANKS TO
 	Denis Karzhavin and Andrew Kuchinsky for C110 (9000/777) workstation
 	where HP-UX port was created.
 
-August, 10, 2025
+August, 11, 2025
 Mikhail Zakharov <zmey20000@yahoo.com>

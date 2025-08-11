@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# em_ssh.sh v.0.6, 2005, 2006, 2023 Mikhail Zakharov
+# em_ssh.sh v.0.6, 2005, 2006, 2025 Mikhail Zakharov
 # ssh example for empty
 
 ssh="ssh"						# (/full/path/to/)ssh
@@ -20,6 +20,7 @@ empty -f -L $tmp -i $fifo_in -o $fifo_out $cmd
 if [ $? = 0 ]; then
 	if [ -w $fifo_in -a -r $fifo_out ]; then
 		echo "Sending Password"
+		empty -w -v -i $fifo_out -o $fifo_in -t 5 "es" "yes\n" "assword" "$password\n"
 		empty -w -v -i $fifo_out -o $fifo_in -t 5 "assword:" "$password\n" "assword" "$password\n"
 		echo "Sending tests"
 		empty -s -o $fifo_in "echo \"-- EMPTY TEST BEGIN --\"\n"
